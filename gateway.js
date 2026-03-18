@@ -5,6 +5,10 @@ const fs = require('fs');
 const path = require('path');
 const browser = require('./browser');
 const wecom = require('./wecom');
+const telegram = require('./telegram');
+const discord = require('./discord');
+const feishu = require('./feishu');
+const dingtalk = require('./dingtalk');
 
 // 读取 .env 配置文件
 function loadEnv() {
@@ -93,6 +97,10 @@ app.use(express.json());
 
 browser(app);
 wecom(app);
+telegram(app);
+discord(app);
+feishu(app);
+dingtalk(app);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

@@ -1,6 +1,6 @@
 # Mini OpenClaw Gateway
 
-> 轻量级 AI 聊天网关，支持 WebSocket、HTTP API、企业微信被动回复
+> 轻量级 AI 聊天网关，支持 WebSocket、HTTP API、企业微信、Telegram、Discord、飞书、钉钉
 
 ## 功能特性
 
@@ -15,7 +15,7 @@
 ### 1. 安装依赖
 
 ```bash
-cd /Users/shenjie/cursorIDE/mini-openclaw
+cd /xx/mini-openclaw
 npm install
 # 或
 pnpm install
@@ -47,6 +47,16 @@ WECOM_SECRET=你的应用Secret
 WECOM_AGENT_ID=你的AgentId
 WECOM_TOKEN=回调Token
 WECOM_ENCODING_AES_KEY=回调AESKey
+
+# Telegram Bot 配置（可选）
+TEGRAM_BOT_TOKEN=你的BotToken
+TEGRAM_SECRET=你的Secret
+
+# Discord Bot 配置（可选）
+DISCORD_BOT_TOKEN=你的BotToken
+DISCORD_PUBLIC_KEY=你的PublicKey
+DISCORD_APPLICATION_ID=你的ApplicationId
+DISCORD_GUILD_ID=你的服务器ID
 ```
 
 ### 3. 启动服务
@@ -155,6 +165,124 @@ node gateway.js
 
 在企业微信应用里发送消息，应该能收到 AI 回复！
 
+## Telegram Bot 配置（可选）
+
+### 1. 创建机器人
+
+1. 在 Telegram 搜索 @BotFather
+2. 发送 `/newbot` 创建新机器人
+3. 获取 Bot Token
+
+### 2. 配置环境变量
+
+```env
+TEGRAM_BOT_TOKEN=你的BotToken
+```
+
+### 3. 设置 Webhook
+
+需要公网域名（可用 ngrok 内网穿透）：
+
+```bash
+# 先启动服务
+node gateway.js
+
+# 然后设置 webhook（把 URL 换成你的公网地址）
+curl "https://your-domain.com/api/telegram/setwebhook?url=https://your-domain.com/api/telegram/webhook"
+```
+
+### 4. 测试
+
+在 Telegram 里给机器人发消息，应该能收到 AI 回复！
+
+---
+
+## Discord Bot 配置（可选）
+
+### 1. 创建应用和机器人
+
+1. 访问 https://discord.com/developers/applications
+2. 创建新应用 → 创建机器人
+3. 获取 **Token** (DISCORD_BOT_TOKEN)
+4. 获取 **Public Key** (DISCORD_PUBLIC_KEY)
+5. 获取 **Application ID** (DISCORD_APPLICATION_ID)
+
+### 2. 邀请机器人
+
+在 OAuth2 → URL Generator 中配置：
+- scopes: `bot`
+- permissions: `Send Messages`, `Read Message History`
+- 生成邀请链接并加入服务器
+
+### 3. 配置环境变量
+
+```env
+DISCORD_BOT_TOKEN=你的BotToken
+DISCORD_PUBLIC_KEY=你的PublicKey
+DISCORD_APPLICATION_ID=你的ApplicationId
+```
+
+### 4. 配置 Interactive Endpoint
+
+在 Discord Developer Portal → Application → Interactive Endpoint：
+- URL: `https://你的域名/api/discord/interactions`
+
+### 5. 测试
+
+在服务器里 @机器人 发消息，应该能收到 AI 回复！
+
+---
+
+## 飞书配置（可选）
+
+### 方式一：自定义机器人 Webhook（简单）
+
+1. 飞书群设置 → 添加机器人 → 选择"自定义机器人"
+2. 复制 Webhook 地址
+3. 配置环境变量：
+
+```env
+FEISHU_WEBHOOK_URL=https://open.feishu.cn/open-apis/bot/hook/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+4. 重启服务，群里发消息就能收到 AI 回复！
+
+### 方式二：企业自建应用（功能多）
+
+1. 访问 https://open.feishu.cn/ 创建企业自建应用
+2. 获取 App ID 和 App Secret
+3. 配置权限：
+   - im:chat:readonly
+   - im:message:send_as_bot
+   - im:message:receive
+4. 发布应用并在群里添加
+5. 配置环境变量：
+
+```env
+FEISHU_APP_ID=cli_xxxxxxxxxxxxxx
+FEISHU_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+---
+
+## 钉钉配置（可选）
+
+1. 钉钉群设置 → 智能群助手 → 添加机器人
+2. 选择"自定义机器人"
+3. 可选：设置加签密钥或关键词
+4. 复制 Webhook 地址
+5. 配置环境变量：
+
+```env
+DINGTALK_WEBHOOK_URL=https://oapi.dingtalk.com/robot/send?access_token=xxxxx
+# 可选：加签密钥
+DINGTALK_SECRET=SECxxxxxxxxxxxxxxxxxxxx
+```
+
+6. 重启服务，群里发消息就能收到 AI 回复！
+
+---
+
 ## 项目结构
 
 ```
@@ -163,22 +291,47 @@ mini-openclaw/
 ├── .env.example      # 配置模板
 ├── gateway.js        # 主入口
 ├── wecom.js          # 企业微信模块
+├── telegram.js       # Telegram Bot 模块
+├── discord.js       # Discord Bot 模块
+├── feishu.js        # 飞书模块
+├── dingtalk.js      # 钉钉模块
 ├── browser.js        # 浏览器控制模块
 ├── package.json      # 项目依赖
 ├── gateway.log       # 运行日志
 └── data/
-    └── sessions/     # 会话存储
-    └── wecom-sessions/  # 企业微信会话存储
+    ├── sessions/        # HTTP API 会话存储
+    ├── wecom-sessions/ # 企业微信会话存储
+    ├── telegram-sessions/ # Telegram 会话存储
+    ├── discord-sessions/ # Discord 会话存储
+    ├── feishu-sessions/ # 飞书会话存储
+    └── dingtalk-sessions/ # 钉钉会话存储
 ```
 
 ## 环境变量说明
 
 | 变量名 | 必填 | 默认值 | 说明 |
 |--------|------|--------|------|
-| `LLM_BASE_URL` | 是 | http://[IP_ADDRESS]/v1 | LLM API 地址 |
+| `LLM_BASE_URL` | 是 | http://192.168.111.90:8016/v1 | LLM API 地址 |
 | `LLM_API_KEY` | 是 | - | LLM API Key |
 | `LLM_MODEL` | 是 | claude-opus-4-6 | 使用的模型 |
 | `WS_PORT` | 否 | 18789 | WebSocket 端口 |
+| `HTTP_PORT` | 否 | 18790 | HTTP API 端口 |
+| `WECOM_CORP_ID` | 否 | - | 企业微信 CorpID |
+| `WECOM_SECRET` | 否 | - | 企业微信应用 Secret |
+| `WECOM_AGENT_ID` | 否 | - | 企业微信应用 AgentId |
+| `WECOM_TOKEN` | 否 | - | 回调验证 Token |
+| `WECOM_ENCODING_AES_KEY` | 否 | - | 回调加密 Key |
+| `TEGRAM_BOT_TOKEN` | 否 | - | Telegram Bot Token |
+| `TEGRAM_SECRET` | 否 | - | Telegram Webhook Secret |
+| `DISCORD_BOT_TOKEN` | 否 | - | Discord Bot Token |
+| `DISCORD_PUBLIC_KEY` | 否 | - | Discord Public Key |
+| `DISCORD_APPLICATION_ID` | 否 | - | Discord Application ID |
+| `DISCORD_GUILD_ID` | 否 | - | Discord 服务器 ID |
+| `FEISHU_APP_ID` | 否 | - | 飞书 App ID |
+| `FEISHU_APP_SECRET` | 否 | - | 飞书 App Secret |
+| `FEISHU_WEBHOOK_URL` | 否 | - | 飞书 Webhook URL |
+| `DINGTALK_WEBHOOK_URL` | 否 | - | 钉钉 Webhook URL |
+| `DINGTALK_SECRET` | 否 | - | 钉钉加签密钥 |
 | `HTTP_PORT` | 否 | 18790 | HTTP API 端口 |
 | `WECOM_CORP_ID` | 否 | - | 企业微信 CorpID |
 | `WECOM_SECRET` | 否 | - | 企业微信应用 Secret |
