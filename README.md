@@ -9,6 +9,9 @@
 - 💬 **企业微信接入** - 被动回复模式，可直接在微信里聊天
 - 🤖 **LLM 集成** - 调用本地 LLM API 生成回复
 - 💾 **会话记忆** - 自动保存对话历史
+- 🔧 **工具调用** - AI 可调用搜索、浏览器、文件等工具
+- ⏰ **定时任务** - 支持 cron 表达式定时执行任务
+- 🔌 **插件系统** - 可扩展的插件架构
 
 ## 快速开始
 
@@ -71,6 +74,11 @@ node gateway.js
 🚀 OpenClaw Gateway started on ws://localhost:18789
 🌐 OpenClaw HTTP API started on http://localhost:18790
 [WeCom] 企业微信被动回复已加载
+[Telegram] Telegram Bot 模块已加载
+[Discord] Discord Bot 模块已加载
+[飞书] 飞书机器人模块已加载
+[钉钉] 钉钉机器人模块已加载
+[Plugin] 插件系统已加载
 ```
 
 ## API 接口
@@ -131,6 +139,117 @@ ws.onmessage = (event) => {
   const data = JSON.parse(event.data);
   console.log('回复:', data.message);
 };
+```
+
+## 工具调用
+
+AI 可以自动调用以下工具：
+
+| 工具 | 说明 | 示例 |
+|------|------|------|
+| `web_search` | 搜索网页 | "搜索最新的AI新闻" |
+| `web_fetch` | 获取网页内容 | "打开 https://github.com" |
+| `get_weather` | 查询天气 | "北京天气怎么样" |
+| `read_file` | 读取文件 | "看看 README.md 内容" |
+| `write_file` | 写入文件 | "写一个 hello.txt" |
+| `exec_command` | 执行命令 | "运行 ls -la" |
+| `get_time` | 获取时间 | "现在几点了" |
+| `send_message` | 发送消息 | "给微信用户发消息" |
+
+## 定时任务
+
+### cron 表达式
+
+| 表达式 | 说明 | 示例 |
+|--------|------|------|
+| `* * * * *` | 每分钟 | 每分钟执行 |
+| `0 * * * *` | 每小时 | 每小时整点执行 |
+| `0 9 * * *` | 每天早上9点 | 每日任务 |
+| `0 9 * * 1-5` | 工作日早上9点 | 工作日提醒 |
+| `0 */2 * * *` | 每2小时 | 定时任务 |
+
+### API 接口
+
+```bash
+# 列出所有任务
+curl http://localhost:18790/api/cron/list
+
+# 添加定时任务
+curl -X POST http://localhost:18790/api/cron/add \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "早安问候",
+    "type": "llm",
+    "cron": "0 8 * * *",
+    "prompt": "发送一句温暖的早安问候"
+  }'
+
+# 立即执行任务
+curl -X POST http://localhost:18790/api/cron/run/:id
+
+# 删除任务
+curl -X DELETE http://localhost:18790/api/cron/:id
+```
+
+## 插件系统
+
+### 创建插件
+
+```bash
+curl -X POST http://localhost:18790/api/plugins/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-plugin",
+    "description": "我的第一个插件"
+  }'
+```
+
+### 插件目录结构
+
+```
+plugins/
+└── my-plugin/
+    ├── manifest.json    # 插件配置
+    └── index.js         # 插件代码
+```
+
+### manifest.json 格式
+
+```json
+{
+  "name": "插件名称",
+  "version": "1.0.0",
+  "description": "插件描述",
+  "author": "作者",
+  "hooks": ["on_start", "on_stop", "before_message", "after_message"]
+}
+```
+
+### 支持的钩子
+
+| 钩子 | 说明 |
+|------|------|
+| `on_start` | 服务启动时 |
+| `on_stop` | 服务停止时 |
+| `before_message` | 收到消息前 |
+| `after_message` | 发送回复后 |
+| `before_llm` | 调用 LLM 前 |
+| `after_llm` | 调用 LLM 后 |
+
+### API 接口
+
+```bash
+# 列出插件
+curl http://localhost:18790/api/plugins/list
+
+# 加载插件
+curl -X POST http://localhost:18790/api/plugins/load/:name
+
+# 卸载插件
+curl -X POST http://localhost:18790/api/plugins/unload/:name
+
+# 重载所有插件
+curl -X POST http://localhost:18790/api/plugins/reload
 ```
 
 ## 企业微信配置（可选）
@@ -295,16 +414,22 @@ mini-openclaw/
 ├── discord.js       # Discord Bot 模块
 ├── feishu.js        # 飞书模块
 ├── dingtalk.js      # 钉钉模块
+├── tools.js         # 工具调用系统
+├── cron.js          # 定时任务系统
+├── plugins.js       # 插件系统
 ├── browser.js        # 浏览器控制模块
 ├── package.json      # 项目依赖
 ├── gateway.log       # 运行日志
+├── plugins/          # 插件目录
 └── data/
     ├── sessions/        # HTTP API 会话存储
     ├── wecom-sessions/ # 企业微信会话存储
     ├── telegram-sessions/ # Telegram 会话存储
     ├── discord-sessions/ # Discord 会话存储
     ├── feishu-sessions/ # 飞书会话存储
-    └── dingtalk-sessions/ # 钉钉会话存储
+    ├── dingtalk-sessions/ # 钉钉会话存储
+    ├── cron/           # 定时任务配置
+    └── cron-logs/      # 定时任务日志
 ```
 
 ## 环境变量说明

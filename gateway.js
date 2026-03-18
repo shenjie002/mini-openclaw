@@ -9,6 +9,8 @@ const telegram = require('./telegram');
 const discord = require('./discord');
 const feishu = require('./feishu');
 const dingtalk = require('./dingtalk');
+const cron = require('./cron');
+const plugins = require('./plugins');
 
 // 读取 .env 配置文件
 function loadEnv() {
@@ -101,6 +103,8 @@ telegram(app);
 discord(app);
 feishu(app);
 dingtalk(app);
+cron(app);
+plugins(app);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
