@@ -311,7 +311,7 @@ mini-openclaw/
 
 | 变量名 | 必填 | 默认值 | 说明 |
 |--------|------|--------|------|
-| `LLM_BASE_URL` | 是 | http://192.168.111.90:8016/v1 | LLM API 地址 |
+| `LLM_BASE_URL` | 是 | https://你的域名/v1 | LLM API 地址 |
 | `LLM_API_KEY` | 是 | - | LLM API Key |
 | `LLM_MODEL` | 是 | claude-opus-4-6 | 使用的模型 |
 | `WS_PORT` | 否 | 18789 | WebSocket 端口 |
